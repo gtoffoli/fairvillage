@@ -1,0 +1,167 @@
+{% load staticfiles i18n menu account set_var bootstrap3 %}
+{% get_current_language as LANGUAGE_CODE %}
+{% generate_menu %}
+
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}">
+<head>
+    {# include 'google/analytics.html' #}
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="keywords" content="{% block meta_keywords %}{% trans _("Roma, Lazio, foreigners, immigrants, health, school, work, culture, services") %}{% endblock %}">
+    <meta name="description" content="{% block meta_description %}{% trans _("Culture, well-being, solidarity: geolocated resources for immigrants in zones of roma and municipalities in Lazio")%}{% endblock %}">
+    <meta name="copyright" content="LINK srl, Via Udine 30 - Roma">
+    <meta name="owner" content="LINK srl, Via Udine 30 - Roma">
+    <meta name="author" content="LINK srl - Giovanni Toffoli, Mariarosaria Manco">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block extra_meta %}{% endblock extra_meta %}
+    <title>{% block head_title %}{% endblock %}{% if site_name %} | {{ site_name }}{% endif %}</title>
+    <link rel="icon" href="{% static 'fairvillage/img/favicon.png' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{% static 'roma/img/favicon.png' %}" type="image/png">
+    {% bootstrap_css %}
+    <link href="{% static "fairvillage/css/fairvillage.css" %}" type="text/css" rel="stylesheet">
+    <style>
+        .scrollup{
+            width:30px;
+            height:30px;
+            position:fixed;
+            bottom:30px;
+            right:30px;
+            display:none;
+            text-indent:-9999px;
+            background:white url("{% static 'fairvillage/img/to-top-off-fv.png' %}") no-repeat;
+        }
+        .scrollup:hover {background:white url("{% static 'fairvillage/img/to-top-fv.png' %}") no-repeat;}
+        @media (max-width: 767px) {.scrollup {display:none !important;}}
+    </style>
+    {% block extra_style %}{% endblock extra_style %}
+</head>
+<body id="{% block body_id %}{% endblock body_id %}">
+    {% block topbar_base %}
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#menu-navbar-collapse" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a href="/" title="{% trans 'go home' %}"><img src="{% static "fairvillage/img/fairvillage-logo.png" %}" alt="{{ site_name }}" class="img-responsive"></a>
+                </div>
+                <div class="collapse navbar-collapse" id="menu-navbar-collapse">
+                    <ul class="nav navbar-nav">
+                    {% with menu=menus.main %}{% for item in menu %}
+                        <li class="{% if item.children %} dropdown{% endif %}" id="top-menu-{{ item.slug }}">
+                        {% if item.children %}
+                            <a href="#" class="dropdown-toggle" data-hover="dropdown" data-toggle="dropdown">{% if item.icon %}<i class="icon-{{ item.icon }} icon-white"></i>&nbsp;{% endif %}{{ item.title }}&nbsp;<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                            {% for child in item.children %}
+                                <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                            {% endfor %}
+                            </ul>
+                        {% else %}
+                            <a href="{{ item.url }}">{% if item.icon %}<i class="icon-{{ item.icon }} icon-white"></i>&nbsp;{% endif %}{{ item.title }}</a>
+                        {% endif %}
+                        </li>
+                    {% endfor %}{% endwith %}
+                    </ul>
+                    <div class="navbar-search navbar-left">
+                        <input class="input-search" size="25" placeholder="{% trans "enter" %} 3 {% trans "characters or a few more" %}" type="text" name="q" id="navigation_autocomplete"><div class="icon-search"><i class="fa fa-search" aria-hidden="true"></i></div>
+                    </div>
+                    <form action="{% if use_localeurl %}/localeurl/change/{% else %}/i18n/setlang/{% endif %}" method="post" class="navbar-form navbar-right">{% csrf_token %}
+                        <select name="locale" class="sel-language" onchange='this.form.submit()'>
+                        {% for lang in LANGUAGES %}
+                            <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected="selected"{% endif %}>{% if lang.0 == 'es' %}Español{% else %}{{ lang.1 }}{% endif %}</option>
+                        {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    {% endblock topbar_base%}
+    
+    {% block content_base %}
+        <div class="container back-white pB10">
+            <div class="row">
+                <div class="col-md-10">
+                    {% block content %}{% endblock content %}
+                </div>
+                <div class="col-md-2 sidebar">
+                    <div class="p5">{% include 'fairvillage/partners.html' %}</div>
+                </div>
+            </div>
+        </div>
+    {% endblock content_base %}
+    
+    {% block footer_base %}
+        <div class="footerbar"><a href="#" class="scrollup">Scroll</a>
+            <div class="container">
+                <div class="footer-colophon">
+                    <div class="navbar-left">
+                        &copy; {% now "Y" %} LINK SRL - P. IVA 02098911007 :: Via Udine 30 - 00161 Roma :: <a href="mailto:fairvillage@linkroma.it">fairvillage@linkroma.it</a> - www.fairvillage.eu
+                    </div>
+                    <div class="navbar-right">
+                        <ul class="list-inline mB0"><li><img src="{% static "fairvillage/img/Funded-by-fiadopt.png" %}" alt="logo of the FI-Adopt Project" style="vertical-align:initial; padding:6px 9px 6px 6px; border-radius:3px" class="img-responsive back-white"></a></li><li><img src="{% static "fairvillage/img/Powered-BY-FIWARE_v_rgb_.png" %}" alt="logo of the FI-WARE" style="vertical-align:initial; padding:6px 6px 0px 3px; border-radius:3px" class="back-white img-responsive"></li></ul>
+                    </div> 
+                </div>
+            </div>
+        </div>
+    {% endblock %}
+
+    {% block body_scripts_base %}
+        {% bootstrap_javascript jquery=True %}
+        <script type="text/javascript" src="https://use.fontawesome.com/d391635073.js"></script>
+        <script type="text/javascript" src="{% static "roma/js/cookiechoices.js" %}"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', function(event) {
+        cookieChoices.showCookieConsentBar('{% trans "We use cookies to personalise content and ads, to provide social media features and to analyse our traffic. We also share information about your use of our site with our social media, advertising and analytics partners who may combine it with other information you’ve provided to them or they’ve collected from your use of their services." %}', 'OK', '{% trans "learn more"|upper %}', '/help/privacy');
+        });
+        </script>
+        <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.js' %}"></script>
+        {% if map %}
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js?v=3.29&key={{maps_key}}"></script>
+        <script type="text/javascript" src="{% static 'roma/ol/OpenLayers.js' %}"></script>
+        {% block mapjs %}{% endblock mapjs %}
+        {% endif %}
+
+        <script type="text/javascript">
+           $(document).ready(function() {
+                $("body").css("cursor","default")
+                $("a").on("click", function() {$("body").css("cursor","wait")});
+                $("a.dropdown-toggle").on("click", function() {$("body").css("cursor","default")});
+                $('a').tooltip();
+                if ($('#navigation_autocomplete').length > 0) {
+                    $('#navigation_autocomplete').yourlabsAutocomplete({
+                        url: '{% url 'navigation_autocomplete' %}',
+                        choiceSelector: 'a',
+                        minimumCharacters: 3,
+                        placeholder: '{% trans "enter" %} 3 {% trans "characters or a few more" %}'
+                    }).input.bind('selectChoice', function(e, choice, autocomplete) {
+                        document.location.href = choice.attr('href');
+                    });
+                }
+                $(window).scroll(function(event){
+                    event.preventDefault();
+                    if ($(this).scrollTop() > 100) {
+                        $('.scrollup').fadeIn();
+                    } else {
+                        $('.scrollup').fadeOut();
+                    }
+                });
+                
+                $('.scrollup').click(function(event){
+                    event.preventDefault();
+                    $("body").css("cursor","default")
+                    $("html, body").animate({ scrollTop: 0 }, 600);
+                    return false;
+                });
+           });
+        </script>
+
+        {% block body_scripts %}{% endblock body_scripts %}
+    {% endblock body_scripts_base %}
+
+    {% block extra_body_base %}{% endblock extra_body_base %}
+	</body>
+</html>

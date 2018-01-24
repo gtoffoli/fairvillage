@@ -1,0 +1,360 @@
+{% extends "roma/fairvillage_base.html" %}
+{% load staticfiles i18n %}
+
+{% block head_title %}{{ poitype.name }} - {% if zone and zone.code != 'ROMA' %}{{ zone.name }}{% else %}Roma{% endif %}{% endblock %}
+
+{% block body_id %}poitype_detail{% endblock %}
+
+{% block content %}
+<div class="mT20">
+    <div class="segnaposto">{{region}}</div>
+    <h1>
+{% if zone and zone.code != 'ROMA' %}
+  {{ zone.name }} <a href="/zona/{{ zone.slug }}/" data-toogle="tooltip" title="{% trans 'show the resources on the map' %}"><small><i class="fa fa-map-o" aria-hidden="true"></i></small></a><br>
+{% endif %}
+{{ poitype.name }}
+{% if zone and zone.code != 'ROMA' %}
+   <a href="/categoria/{{ poitype.slug }}/"data-toogle="tooltip" title="{% trans 'show all resources in this category' %}"><small><i class="fa fa-map-o" aria-hidden="true"></i></small></a>
+{% endif %}
+    </h1>
+    <div class="row mB20">
+        <div class="col-md-2">
+            <div class="boxround-small help-small">
+                {{ help|safe }}
+                {% if not zone %}{% for zone in zone_list %}
+                    <div><strong>{{ zone.name }}:
+                        <a href="/categoria/{{ poitype.slug }}/zona/{{ zone.slug }}/" title="{% trans "list the resources of the category" %} {{ poitype.name }} {% trans "in the zone" %} {{ zone.name }}">
+                        {{ zone.count }}</a></strong>
+                    </div>
+                {% endfor %}{% endif %}
+            </div>
+        </div>
+        <div class="col-md-10">
+            <div id="map" class="mapZones"></div>
+        </div>
+    </div>
+    {% if poi_dict_list %}
+        <div><table class="table table-striped table-list"><tbody id="resources">
+            {% for poi_dict in poi_dict_list %}{% include "pois/_fv_poi_list_item.html" %}{% endfor %}
+        </tbody></table></div>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block mapjs %}
+<script type="text/javascript">
+var json_zones = {};
+</script>
+{% if poi_dict_list %}
+    <script type="text/javascript" src="{% static "pois/CenteredCluster.js" %}" ></script>
+    <script type="text/javascript" src="{% static "pois/patches_OL-popup-autosize.js" %}" ></script>
+    <script type="text/javascript" src="{% static "pois/FeaturePopups.js" %}" ></script>
+    <script type="text/javascript" src="{% static "pois/pois_symbols.js" %}" ></script>
+    <script type="text/javascript" src="{% static "pois/pois_map.js" %}" ></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}roma/js/geojson/{{ zone.safe_code }}.js"></script>
+    <script type="text/javascript">
+        var poi_style = new OpenLayers.Style({
+            'fillColor': '#FF0000',
+            'fillOpacity': .0, // .2,
+            'strokeColor': '${color}',
+            'strokeWidth': 1,
+            'pointRadius': '${radius}',
+            'label': '${count}',
+            'labelOutlineWidth': 1,
+            'fontColor': '#333333',
+            'fontSize': '12px',
+            'fontWeight': 'normal',
+            'graphicName': '${symbol}',
+        },
+        { 'context': {
+            radius: function(feature) {
+                // return Math.max(5, 2 * (feature.layer.map.getZoom() - 8));
+                var radius = Math.max(5, 2 * (feature.layer.map.getZoom() - 8));
+                var num = feature.attributes.count || 1;
+                if (num>1) return Math.max(radius, Math.min(cluster_distance/2 + 2, radius * Math.sqrt(Math.sqrt(num))));
+                else return radius;
+            },
+            symbol: function(feature) {
+                var num = feature.attributes.count || 1;
+                if (num>1) return 'circle';
+                else return feature.attributes.icon_name;
+            },
+            color: function(feature) {
+                var num = feature.attributes.count || 1;
+                if (num>1) return feature.cluster[0].attributes.icon_color;
+                else return feature.attributes.icon_color;
+            },
+            count: function(feature) {
+                var num = feature.attributes.count || 1;
+                if (num>1) return num;
+                else return '';
+            }
+        }
+    });
+    var poi_style_selected = new OpenLayers.Style({
+        'strokeWidth': 2,
+        // 'label': '${name}',
+        'fontSize': '14px',
+        'cursor': 'pointer',
+    });
+    var poi_style_map = new OpenLayers.StyleMap({
+        'default': poi_style,
+        'select': poi_style_selected,
+    });
+    var zone_style = new OpenLayers.Style({
+        'fillColor': 'white',
+        'fillOpacity': .4,
+        'strokeColor': '#333333',
+    });
+    var zone_style_map = new OpenLayers.StyleMap({
+        'default': zone_style,
+    });
+    var map, geojson_format, pois;
+    var MAX_ZOOM = 15;
+    var cluster_distance = 15;
+    var centered_cluster_strategy = new OpenLayers.Strategy.CenteredCluster({distance:cluster_distance, threshold:2});
+    function map_init(){
+        map = new OpenLayers.Map('map', {
+            projection: proj_OSM,
+            // eventListeners: {'zoomend': on_zoom}
+        });
+        for (var i = 0; i< map.controls.length; i++) {
+            if (map.controls[i].displayClass == "olControlNavigation") {
+                map.controls[i].disableZoomWheel();
+            }
+        }
+        map.div.oncontextmenu = function noContextMenu(e){return false;};
+        // map.addControl(new OpenLayers.Control.MousePosition());
+        map.addControl(new OpenLayers.Control.LayerSwitcher());
+        map.addControl(new OpenLayers.Control.ScaleLine({geodesic: 'true'}));
+        var gmap = new OpenLayers.Layer.Google("Google Streets", { numZoomLevels: 20 });
+        var gsat = new OpenLayers.Layer.Google("Google Satellite", {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22});
+        var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
+        map.addLayer(gmap);
+        map.addLayer(gsat);
+        map.addLayer(osm);
+        geojson_format = new OpenLayers.Format.GeoJSON();
+        {% if zone.code != 'ROMA' %}
+            vectors = new OpenLayers.Layer.Vector("Zone");
+            {% if zone.zonetype.id == 0 or zonetype.id == 1 or zonetype.id == 3 or zonetype.id == 6  or zonetype.id == 7 %}
+                vector = geojson_format.read(json_zones['{{ zone.safe_code }}'])[0];
+            {% else %}
+                vector = geojson_format.read({{zone.geom_OSM.geojson|safe}})[0]; // We mark it 'safe' so that Django doesn't escape the quotes.
+            {% endif %}
+            vector.attributes = { id:{{zone.id}}, name: "{{zone.code}}", description: "{{zone.name}}", type: 'zona'};
+            vectors.addFeatures(vector);
+            map.addLayer(vectors);
+            vectors.styleMap = zone_style_map;
+        {% endif %}
+        // pois = new OpenLayers.Layer.Vector("{% trans "Resources" %}");
+        pois = new OpenLayers.Layer.Vector("{% trans "Resources" %}", { strategies: [centered_cluster_strategy]});
+        {% if poi_dict_list %}
+            {% for poi_dict in poi_dict_list %}
+                {% if poi_dict.point %}
+                    poi = geojson_format.read({{poi_dict.point|safe}})[0]; // We mark it 'safe' so that Django doesn't escape the quotes.
+                    poi.attributes = { id: {{poi_dict.id}}, name: "{{poi_dict.safe_name}}".replace("&#39;", "'"), type: "{{poi_dict.category}}", icon_name: "{{poi_dict.icon}}", icon_color: "{{poi_dict.color}}", url: "{{poi_dict.url}}" };
+                    pois.addFeatures(poi);
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        map.addLayer(pois);
+        pois.styleMap = poi_style_map;
+        var fpControl = new OpenLayers.Control.FeaturePopups();
+        fpControl.addLayer(pois, {
+            templates: {
+                // .name is attributes.name on features, and so on.
+                hover: '${.name}',
+                hoverList: '<b>${count} {% trans "Resources" %}</b><br>${html}',
+                hoverItem: '${.name}<br>',
+                // select: single & list
+                single: '<div><h4>${.name}</h4></div><div><a href="${.url}">{% trans "show the resource profile" %}</a></div>',
+                list: '<h4>${count} {% trans "Resources" %}</h4>${html}',
+                // item: '<li><a href="${.url}" ${showPopup()}>${.name}</a></li>'
+                item: '<li><a href="${.url}" title="{% trans "show the resource profile" %}">${.name}</a></li>'
+            }
+        });
+        map.addControl(fpControl);
+        {% if zone.code == 'ROMA' %}
+            map.zoomToExtent(pois.getDataExtent(), false);
+        {% else %}
+            map.zoomToExtent(vectors.getDataExtent(), false);
+        {% endif %}
+    }
+    </script>
+{% elif zone_list %}
+    {% for zone in zone_list %}<script type="text/javascript" src="{{ STATIC_URL }}roma/js/geojson/{{ zone.safe_code }}.js"></script>{% endfor %}
+    <script type="text/javascript">
+        {% if zone_list.0.count %}
+            var centroid_style = new OpenLayers.Style({
+                'fillColor': 'white',
+                'fillOpacity': .5,
+                'strokeWidth': 2,
+                'strokeColor': '${color}',
+                'strokeOpacity': 1.0,
+                'pointRadius': '${radius}',
+                'label': '${label}',
+                'labelOutlineWidth': 1,
+                'fontColor': '${color}',
+                'fontOpacity': 1.0,
+                'fontSize': '12px',
+                'fontWeight': 'bold',
+                'graphicName': 'circle',
+            },
+            { 'context': {
+                radius: function(feature) {
+                var count_factor = 3, span = {{max}}-{{min}};
+                if (span) count_factor = 6*(feature.attributes['count']-{{min}})/span;
+                var radius = count_factor + Math.max(9, 3*(feature.layer.map.getZoom()-6));
+                return radius;
+                },
+            }
+            });
+            var centroid_style_selected = new OpenLayers.Style({
+                'fillOpacity': 1.0,
+                'fontSize': '14px',
+                'cursor': 'pointer',
+            });
+            var centroid_style_map = new OpenLayers.StyleMap({
+                'default': centroid_style,
+                'select': centroid_style_selected,
+            });
+        {% endif %}
+
+        var zones, zone_highlight_control, zone_select_control;
+        var map, base_layer;
+        function map_init(){
+            OpenLayers.Projection.addTransform("EPSG:900913", "EPSG:3857", "EPSG:23032");
+            // proj_OSM = new OpenLayers.Projection("EPSG:900913");
+            proj_OSM = new OpenLayers.Projection("EPSG:3857");
+            proj_ISTAT = new OpenLayers.Projection("EPSG:23032");
+            map = new OpenLayers.Map('map', {
+            projection: proj_OSM,
+            {% if not zone_list.0.count %}controls: []{% endif %}
+            });
+            map.div.oncontextmenu = function noContextMenu(e){return false;};
+            var gmap = new OpenLayers.Layer.Google("Google Streets", { numZoomLevels: 20 });
+            map.addLayer(gmap);
+            var gsat = new OpenLayers.Layer.Google("Google Satellite", {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22});
+            map.addLayer(gsat);
+            var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
+            map.addLayer(osm);
+            geojson_format = new OpenLayers.Format.GeoJSON();
+            zones = new OpenLayers.Layer.Vector("Zone");
+            zones.styleMap = zone_style_map;
+            {% if zone_list.0.count %}centroids = new OpenLayers.Layer.Vector("Baricentri");{% endif %}
+            {% for zone in zone_list %}{% if zone.has_geom %}
+                {% if zone.zonetype_id == 0 or zone.zonetype_id == 1 or zone.zonetype_id == 3 or zone.zonetype_id == 6  or zone.zonetype_id == 7 %}
+                    ol_zone = geojson_format.read(json_zones['{{ zone.safe_code }}'])[0];
+                {% else %}
+                    ol_zone = geojson_format.read({{zone.geom|safe}})[0]; // We mark it 'safe' so that Django doesn't escape the quotes.
+                {% endif %}
+                {% if zone.count %}
+                    ol_zone.attributes = { label: "", description: "{{zone.name}}", type: 'municipio', url: "{{zone.url}}", color: 'rgb(4,127,173)', size: 16, border: '#A63840',};
+                    centroid = geojson_format.read({{zone.centroid|safe}})[0];
+                    centroid.attributes = { count: {{zone.count}}, label: "{{zone.count}}", description: "{{zone.name}}", url: "{{zone.url}}", color: 'rgb(4,127,173)', border: '#A63840',};
+                    centroids.addFeatures(centroid);
+                {% else %}
+                    ol_zone.attributes = { label: "{{zone.label}}", description: "{{zone.name}}", type: 'municipio', url: "{{zone.url}}", color: '#A63840', size: 12, border: '#333333',};
+                {% endif %}
+                zones.addFeatures(ol_zone);
+            {% endif %}{% endfor %}
+            map.addLayer(zones);
+            {% if zone_list.0.count %}
+                map.addLayer(centroids);
+                centroids.styleMap = centroid_style_map;
+                centroid_highlight_control = new OpenLayers.Control.SelectFeature(centroids, {
+                    hover: true,
+                    highlightOnly: true,
+                });
+                map.addControl(centroid_highlight_control);
+                centroid_select_control = new OpenLayers.Control.SelectFeature(centroids, {
+                    box: false,
+                    clickout: false,
+                    toggle: true,
+                    multiple: true,
+                    multipleKey: 'shiftKey',
+                });
+                map.addControl(centroid_select_control);
+                centroid_highlight_control.activate();
+                centroid_select_control.activate();
+                centroids.events.register('featureselected', this, on_feature_selected);
+                map.setCenter(new OpenLayers.LonLat(1390000.0, 5143000.0), 9);
+                map.zoomToExtent(zones.getDataExtent(), true);
+            {% else %}
+                zone_highlight_control = new OpenLayers.Control.SelectFeature(zones, {
+                    hover: true,
+                    highlightOnly: true,
+                });
+                zone_select_control = new OpenLayers.Control.SelectFeature(zones, {
+                    box: false,
+                    clickout: false,
+                    toggle: true,
+                    multiple: true,
+                    multipleKey: 'shiftKey',
+                });
+                zones.events.register('featureselected', this, on_feature_selected);
+                map.addControl(zone_highlight_control);
+                map.addControl(zone_select_control);
+                zone_highlight_control.activate();
+                zone_select_control.activate();
+                // roma_lon = 12.4750; roma_lat = 41.9050;
+                map.setCenter(new OpenLayers.LonLat(1390000.0, 5143000.0), 9);
+            {% endif %}
+        }
+
+        function show_scale(){
+        }
+
+        function on_feature_selected(event){
+            // get feature attributes
+            attrs = event.feature.attributes;
+            url = attrs.url
+            // navigate to the feature detail page
+            window.location.href = url;
+            return true;
+        }
+
+        var zone_style = new OpenLayers.Style({
+            'fillColor': 'white',
+            'fillOpacity': .4,
+            'fontColor': 'transparent',
+            'fontOpacity': 1.0,
+            'fontSize': '${size}',
+            'fontWeight': 'bold',
+            {% if zonetype.id == 2 or zonetype.id == 3 or zonetype.id == 6 %}
+                'label': '',
+            {% else %}
+                'label': '${label}',
+            {% endif %}
+            //'strokeColor': '${border}',
+            'strokeColor': '#333333',
+        });
+        var zone_style_selected = new OpenLayers.Style({
+            'fillColor': '#FF8000',
+            'fillOpacity': .2,
+            'fontColor': '${color}',
+            'fontOpacity': 1.0,
+            'fontSize': '${size}',
+            'fontWeight': 'bold',
+            'label': '${label}',
+            'strokeColor': '${border}',
+            'cursor': 'pointer',
+        });
+        var zone_style_map = new OpenLayers.StyleMap({
+            'default': zone_style,
+            'select': zone_style_selected,
+        });
+        function highlight_zone(zone_id, on) {
+            for (var i = 0; i < zones.features.length; ++i) {
+                zone = zones.features[i];
+                if (zone.attributes['id'] == zone_id)
+                    if (on)
+                        zone_highlight_control.highlight(zone);
+                    else
+                    zone_highlight_control.unhighlight(zone);
+            }
+        }
+    </script>
+{% endif %}
+<script type="text/javascript">map_init()</script>
+{% endblock mapjs %}

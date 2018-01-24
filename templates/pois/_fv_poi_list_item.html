@@ -1,0 +1,13 @@
+{% load i18n staticfiles %}
+<tr>
+<td class="hidden-xs td-img">
+    <img src="{{ STATIC_URL }}roma/img/icons/{{ poi_dict.icon}}.png">
+</td>
+<td>
+<div class="row">
+<div class="col-md-6"><a href="{{ poi_dict.url }}" data-toogle="tooltip" title="{% trans "show resource" %} {{ poi_dict.name }}">{{ poi_dict.name }}</a></div>
+<div class="col-md-6"><small>{% if  poi_dict.street_url %}<a href="{{ poi_dict.street_url }}" data-toogle="tooltip" title="{% trans "show" %} {{ poi_dict.street_name }}">{{ poi_dict.street_name }}</a>{% if poi_dict.number %}, {{ poi_dict.number }}{% endif %}{% else %}<span class="notranslate">{{ poi_dict.street_address }}</span>{% endif %} - <a href="/indice-zona/{{poi_dict.cap }}/" data-toogle="tooltip" title="{% trans "list the resources" %} {% trans "located in the zone with zipcode" %} {{poi_dict.cap }}">{{poi_dict.cap }}</a> {% if poi_dict.comune.1 == 'roma' %}{{ poi_dict.comune.0 }}{% else %}<a href="/indice-zona/{{poi_dict.comune.1}}/" data-toogle="tooltip" title="{% trans "list the resources" %} {% trans "located in the town" %} {{ poi_dict.comune.0 }}">{{ poi_dict.comune.0 }}</a>{% endif %}</small></div>
+<div class="col-md-9"><small>{{ poi_dict.short }}</small></div>
+</div>
+</td>
+</tr>

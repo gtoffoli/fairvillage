@@ -1,0 +1,33 @@
+{% extends "roma/fairvillage_base.html" %}
+{% load staticfiles i18n %}
+
+{{ current_path }}
+
+{% block head_title %}{% trans "Resources by category" %} - {% if zone.zonetype_id == 3 %}{{ zone.code }} - {% elif zone.zonetype_id == 6 %}{{ zone.zonetype_label|capfirst }} {% endif %}{{ zone.name }}, {% if 'COM.' in zone.code %}{{region}}{% else %}{{region|lower|capfirst}}{% endif %}{% endblock %}
+
+{% block body_id %}zone_category_index{% endblock %}
+{% block content %}
+    <div class="mT20">
+        <div class="segnaposto">{{region}}</div>
+        <h1>{% if zone.zonetype_id == 3 %}{{ zone.code}} - {% elif zone.zonetype_id == 6 %}{{zone.zonetype_label|capfirst}} {% endif %}{{ zone.name }} 
+            {% if can_edit %}<a href="{% url "admin:pois_zone_change" zone.id %}"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>{% endif %}
+            {% if category_poitype_list %}<a href="/zona/{{ zone.slug }}/" title="{% trans "show the resources on the map" %}" data-toogle="tooltip"><small><i class="fa fa-map-o" aria-hidden="true"></i></small></a>{% endif %}
+        </h1>
+        {% if category_poitype_list %}
+            <ul class="elenco elenco-vertical">
+            {% for category_name, poitype_icon, poitype_slug, m, poi_name, poi_url in category_poitype_list %}
+                <li><img src="{{ STATIC_URL }}roma/img/icons/{{ poitype_icon}}.png"> {{ category_name }}
+                {% if m == 1 %}
+                    [<a href="{{ poi_url }}" title="{% trans "show resource" %}" rel="tooltip" class="alfa-blue-normal">{{ m }}</a>]
+                {% else %}
+                    [<a href="/categoria/{{ poitype_slug }}/zona/{{ zone.slug }}/" title="{%blocktrans%}show the resources of the category {{category_name}} on the map{%endblocktrans%}" data-toogle="tooltip" class="alfa-blue-normal">{{ m }}</a>]
+                {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>{% trans "No resource categories are present" %} {% trans "for this zone" %}.</p>
+        {% endif %}
+        {% if zone.description %}<div class="boxround">{{ zone.description|safe }}</div>{% endif %}
+    </div>
+{% endblock content %}

@@ -1,0 +1,22 @@
+{% extends "roma/fairvillage_base.html" %}
+{% load staticfiles i18n %}
+
+{{ current_path }}
+
+{% block head_title %}{% trans "Resources by category" %} - ROMA / LAZIO{% endblock %}
+{% block body_id %}category_index{% endblock %}
+{% block content %}
+    <div class="mT20">
+        <h1>{% trans "Resources by category" %}</h1>
+        {% if by_category_list %}
+            <ul class="elenco elenco-vertical">
+            {% for category_name, category_slug, poitype_icon, n in by_category_list %}
+                <li>
+                    <img src="{{ STATIC_URL }}roma/img/icons/{{ poitype_icon}}.png"> {{ category_name|capfirst }}
+                    [<a data-toogle="tooltip" href="/categoria/{{ category_slug }}/" title="{%blocktrans%}show the resources of the category {{category_name}} on the map{%endblocktrans%}">{{ n }}</a>]
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock content %}

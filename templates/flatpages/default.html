@@ -1,0 +1,9 @@
+{% extends "roma/gridA.html" %}
+{% load flatpages %}
+
+{% block head_title %}{{ flatpage.title }}{% endblock %}
+
+{% block column-1 %}
+
+{{ flatpage.content|safe }}
+{% endblock %}
