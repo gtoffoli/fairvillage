@@ -1,0 +1,50 @@
+{% extends "fairvillage/fairvillage_base.html" %}
+{% load staticfiles i18n %}
+
+{% block head_title %}
+	{% if relation == 'affiliated' %}{{ parent.getName }}: {% trans "affiliated resources" %}
+	{% comment %}{% elif relation == 'caredby' %}{{ parent.getName }}: {% trans "friend resources" %}{% endcomment %}{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="mT20">
+        <div class="segnaposto">{{ region }}</div>
+        <h1 class="mB0">{{ parent.getName }} <a href="{{ parent.friendly_url }}" data-toogle="tooltip" title="{% trans "show resource" %}"><small><i class="fa fa-map-o" aria-hidden="true"></i></small></a></h1>
+        <h3 class="mT0">
+            {% if relation == 'affiliated' %}{% trans "affiliated resources"|capfirst %}
+            {% comment %}{% elif relation == 'caredby' %}{% trans "friend resources"|capfirst %}{% endcomment %}{% endif %}
+        </h3>
+
+        <div class="summary mB10">
+        {% for zone in zone_list %}
+            <div class="val">{{ zone.name }} <span class="text-pre-wrap">[ <a href="/rete/{{ parent.slug }}/zona/{{ zone.slug }}/" title="{% trans "list the resources affiliated to" %} {{ parent.getName }} {% trans "in the zone" %} {{ zone.name }}">{{ zone.count }}</a> ]</span></div>
+        {% endfor %}
+        </div>
+        
+        <div class="row mB20">
+            <div class="col-md-2 mR0">
+                <div class="boxround-small help-small">{{ help|safe }}</div>
+            </div>
+            <div class="col-md-10">
+                <div id="map" class="mapZones"></div>
+            </div>
+        </div>
+        {% if poi_dict_list %}
+        <div><table class="table table-striped table-list"><tbody id="resources">
+            {% for poi_dict in poi_dict_list %}{% include "pois/_poi_list_item.html" %}{% endfor %}
+        </tbody></table></div>{% endif %}
+    </div>
+{% endblock content %}
+
+{% block mapjs %}
+    <script type="text/javascript">
+        var json_zones = {};
+    </script>
+    {% if poi_dict_list %}
+        {% include "pois/_fv_map_poi_list_js.html" %}
+    {% elif zone_list %}
+        {% include "pois/_fv_map_zone_list_js.html" %}
+    {% else %}
+        {% include "pois/_map_poi_list_js.html" %}
+    {% endif %}
+{% endblock mapjs %}

@@ -1,9 +1,9 @@
-from menu import Menu, MenuItem
-from django.core.urlresolvers import reverse
-from django.utils.translation import ugettext as _, ugettext_lazy
-from settings import SITE_NAME
+from __future__ import unicode_literals
 
-print (SITE_NAME)
+from menu import Menu, MenuItem
+# from django.core.urlresolvers import reverse
+# from django.urls import reverse
+from django.utils.translation import ugettext as _, ugettext_lazy
 
 def zones_children(request):
     children = []
@@ -125,7 +125,7 @@ def resources_children(request):
              weight=80,
             ))
     return children
-
+"""
 def community_children(request):
     children = []
     children.append (MenuItem(
@@ -177,6 +177,7 @@ def user_menu_title(request):
             return user.username
     else:
         return 'Utente'
+"""
 
 Menu.items = {}
 Menu.sorted = {}

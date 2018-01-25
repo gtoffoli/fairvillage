@@ -27,7 +27,7 @@ admin.autodiscover()
 
 #urlpatterns = patterns('',
 urlpatterns = [
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/', include(fv_router.urls)),
     url(r'^server_version/$', server_version),
     url(r'^search_keys/$', search_keys),
@@ -42,7 +42,9 @@ urlpatterns = [
     url(r'^', include(fv_router.urls)),
     url(r'^indice-zona/(?P<zone_slug>.+)/$', fairvillage_views.zone_category_index_by_slug, name='zona-category'),
     url(r'^zona/(?P<zone_slug>.+)/$', fairvillage_views.zone_detail_by_slug, name='zona'),
-    url(r'^risorsa/(?P<poi_slug>[\w-]+)/rete/$', pois_views.poi_network_by_slug, name='risorsa-rete'),
+    url(r'^rete/(?P<poi_slug>[\w-]+)/zona/(?P<zone_slug>.+)/$', fairvillage_views.poi_network_zone_by_slug, name='rete-zona'),
+    url(r'^risorsa/(?P<poi_slug>[\w-]+)/rete/$', fairvillage_views.poi_network_by_slug, name='risorsa-rete'),
+    url(r'^risorsa/(?P<poi_slug>[\w-]+)/mappa/$', fairvillage_views.resource_map_by_slug, name='risorsa-mappa'),
     url(r'^risorsa/(?P<poi_slug>.+)/$', fairvillage_views.poi_detail_by_slug, name='risorsa'),
     url(r'^categoria/(?P<klass_slug>[\w-]+)/zona/(?P<zone_slug>.+)/$', fairvillage_views.poitype_zone_detail_by_slugs, name='categoria-zona'),
     url(r'^categoria/(?P<klass_slug>.+)/$', fairvillage_views.poitype_detail_by_slug, name='categoria'),
@@ -53,6 +55,7 @@ urlpatterns = [
     url(r'^province', fairvillage_views.zone_index_map, {'zonetype_id': 0, 'prefix': 'PR.'}, name='province'),
     url(r'^municipi$', fairvillage_views.zone_index_map, {'zonetype_id': 7, 'prefix': 'M.'}, name='municipi'),
     url(r'^reti-di-risorse$', fairvillage_views.resource_networks),
+    url(r'^annota-risorsa/(?P<poi_slug>.+)/$', fairvillage_views.poi_add_note_by_slug, name='feedback'),
     url(r'^', include('roma.urls')),
 ]
 

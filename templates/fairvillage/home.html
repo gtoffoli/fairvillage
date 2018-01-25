@@ -1,6 +1,6 @@
-{% extends "roma/fairvillage_base.html" %}
-{% load staticfiles i18n macros cache %}
-{% loadmacros pois/pois_macros.html %}
+{% extends "fairvillage/fairvillage_base.html" %}
+{% load staticfiles menu i18n %}
+{% generate_menu %}
 
 {% block head_title %}Roma, Lazio: {% trans "culture, well-being, solidarity for immigrants" %}{% endblock %}
 

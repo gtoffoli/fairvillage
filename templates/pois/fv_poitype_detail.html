@@ -1,4 +1,4 @@
-{% extends "roma/fairvillage_base.html" %}
+{% extends "fairvillage/fairvillage_base.html" %}
 {% load staticfiles i18n %}
 
 {% block head_title %}{{ poitype.name }} - {% if zone and zone.code != 'ROMA' %}{{ zone.name }}{% else %}Roma{% endif %}{% endblock %}

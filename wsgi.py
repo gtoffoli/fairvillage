@@ -1,16 +1,11 @@
 """
-WSGI config for roma project.
+WSGI config for fairvillage project.
 
-This module contains the WSGI application used by Django's development server
-and any production WSGI deployments. It should expose a module-level variable
-named ``application``. Django's ``runserver`` and ``runfcgi`` commands discover
-this application via the ``WSGI_APPLICATION`` setting.
+It exposes the WSGI callable as a module-level variable named ``application``.
 
-Usually you will have the standard Django WSGI application here, but it also
-might make sense to replace the whole Django WSGI application with a custom one
-that later delegates to the Django one. For example, you could introduce WSGI
-middleware here, or combine a Django application with an application of another
-framework.
+For more information on this file, see
+https://docs.djangoproject.com/en/2.0/howto/deployment/wsgi/
+"""
 
 """
 import os, sys
@@ -25,6 +20,11 @@ if path not in sys.path:
 path = '/home/ubuntu/django/lib/python2.7/site-packages'
 if path not in sys.path:
     sys.path.append(path)
+"""
+
+import os
+
+from django.core.wsgi import get_wsgi_application
 
 """
 # see: http://stackoverflow.com/questions/11383176/problems-hosting-multiple-django-sites-settings-cross-over
@@ -32,13 +32,13 @@ if path not in sys.path:
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fairvillage.settings")
 """
 import django.conf
+import fairvillage
 django.conf.ENVIRONMENT_VARIABLE = "DJANGO_FV_SETTINGS_MODULE"
 os.environ.setdefault("DJANGO_FV_SETTINGS_MODULE", "fairvillage.settings")
 
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
-from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 # Apply WSGI middleware here.

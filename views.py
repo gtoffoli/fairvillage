@@ -580,7 +580,6 @@ def zone_detail(request, zone_id, zone=None):
                 pass
     can_edit = zone.can_edit(request)
     data_dict['can_edit'] = can_edit
-    # eturn render_to_response('pois/fv_zone_detail.html', data_dict, context_instance=RequestContext(request))
     return render(request,'pois/fv_zone_detail.html', data_dict)
 
 def zone_detail_by_slug(request, zone_slug):
@@ -634,3 +633,132 @@ def resource_networks(request):
             poi_dict['num_pois'] = poi.num_pois
             poi_dict_list.append(poi_dict)
     return render(request, 'pois/fv_poi_list.html', {'list_type': 'networks', 'poi_dict_list': poi_dict_list, 'count': len(poi_dict_list)})
+
+
+def poi_network(request, poi_id, poi=None):
+    list_all = request.GET.get('all', None)
+    formato = request.GET.get('format', None)
+    zone_list = zone_list_no_sorted = []
+    poi_dict_list = []
+    max_count = 0
+    min_count = 10000
+    if not poi:
+        poi = get_object_or_404(Poi, pk=poi_id)
+    poi_list = Poi.objects.filter(pois=poi, state=1).order_by('name')
+    zone = get_object_or_404(Zone, code='ROMA')
+    help_text = FlatPage.objects.get(url='/help/network/').content
+    parent = poi
+    if formato:
+        excel_data = pois_to_excel(poi_list)
+        filename = slugify(poi.name)
+        response = HttpResponse(excel_data, content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % filename
+        return response
+    if poi_list.count() > MAX_POIS and not list_all:
+        zones = Zone.objects.filter(zonetype_id=0).exclude(code='ROMA')
+        for zone in zones:
+            q = make_zone_subquery(zone)
+            pois = Poi.objects.filter(q & Q(pois=poi, state=1))
+            if pois:
+                n = pois.count()
+                max_count = max(n, max_count)
+                min_count = min(n, min_count)
+                zone_dict = zone.make_dict()
+                zone_dict['count'] = n
+                zone_dict['url'] = '/rete/%s/zona/%s/' % (poi.slug, zone.slug)
+                # zone_list.append(zone_dict)
+                zone_list_no_sorted.append(zone_dict)
+                zone_list = sorted(zone_list_no_sorted, key=lambda k: k['name'].lower())
+        zone = None
+        help_text = FlatPage.objects.get(url='/help/big-list/').content
+    else:
+        poi_dict_list = [poi.make_dict(list_item=True) for poi in poi_list]
+    region = 'ROMA'
+    if zone_list and poi_list:
+        for item in zone_list:
+            if 'provincia' in item['name'].lower():
+                region = 'LAZIO' 
+                break
+    elif poi_dict_list:
+        for item in poi_dict_list:
+            if item['comune'][1] != 'roma':
+                region = 'LAZIO' 
+                break
+    return render(request, 'pois/fv_network_detail.html', {'relation': 'affiliated', 'help': help_text, 'zone': zone, 'parent': parent, 'poi_dict_list': poi_dict_list, 'zone_list': zone_list, 'min': min_count, 'max': max_count,'region': region,})
+
+def  poi_network_by_slug(request, poi_slug):
+    poi = get_object_or_404(Poi, slug=poi_slug)
+    return poi_network(request, poi.id, poi)
+
+def poi_network_zone(request, poi_id, zone_id, poi=None, zone=None):
+    if not poi:
+        poi = get_object_or_404(Poi, pk=poi_id)
+    if not zone:
+        zone = get_object_or_404(Zone, pk=zone_id)
+    q = make_zone_subquery(zone)
+    poi_list = Poi.objects.filter(q & Q(pois=poi, state=1)).order_by('name')
+    help_text = FlatPage.objects.get(url='/help/network/').content
+    parent = poi
+    poi_dict_list = [poi.make_dict(list_item=True) for poi in poi_list]
+    region = zone.zone_parent()
+    if poi_dict_list:
+        for item in poi_dict_list:
+            if item['comune'][1] != 'roma':
+                region = 'LAZIO' 
+                break
+    return render(request, 'pois/fv_network_detail.html', {'relation': 'affiliated', 'help': help_text, 'parent': parent, 'zone': zone, 'poi_dict_list': poi_dict_list, 'region': region})
+
+def poi_network_zone_by_slug(request, poi_slug, zone_slug):
+    poi = get_object_or_404(Poi, slug=poi_slug)
+    zone = get_object_or_404(Zone, slug=zone_slug)
+    return poi_network_zone(request, poi.id, zone.id, poi=poi, zone=zone)
+
+def resource_map(request, poi_id, poi=None):
+    if not poi:
+        poi = get_object_or_404(Poi, pk=poi_id)
+    poi_list = Poi.objects.filter(careof=poi, state=1).order_by('name')
+    zone = get_object_or_404(Zone, code='ROMA')
+    help_text = FlatPage.objects.get(url='/help/map/').content
+    parent = poi
+    # poi_dict_list = [poi.make_dict() for poi in poi_list]
+    poi_dict_list = [poi.make_dict(list_item=True) for poi in poi_list]
+    region = 'ROMA'
+    if poi_dict_list:
+        for item in poi_dict_list:
+            if item['comune'][1] != 'roma':
+                region = 'LAZIO' 
+                break
+    return render(request, 'pois/fv_network_detail.html', {'relation': 'caredby', 'help': help_text, 'zone': zone, 'parent': parent, 'poi_dict_list': poi_dict_list, 'region': region})
+
+def resource_map_by_slug(request, poi_slug):
+    poi = get_object_or_404(Poi, slug=poi_slug)
+    return resource_map(request, poi.id, poi)
+
+from pois.forms import PoiUserForm, PoiAnnotationForm
+def poi_add_note(request, poi_id, poi=None):
+    flatpage = FlatPage.objects.get(url='/risorsa/annota/')
+    text_body = flatpage.content
+    if not poi:
+        poi = get_object_or_404(Poi, pk=poi_id)
+    form = PoiAnnotationForm(initial={'id': poi_id})
+    return render(request, 'pois/fv_poi_feedback.html', {'poi': poi, 'form': form, 'text_body': text_body})
+
+def poi_add_note_by_slug(request, poi_slug):
+    poi = get_object_or_404(Poi, slug=poi_slug)
+    return poi_add_note(request, poi.id, poi=poi)
+
+def poi_save_note(request):
+    poi_id = int(request.POST.get('id', 0))
+    poi = get_object_or_404(Poi, pk=poi_id)
+    form = PoiAnnotationForm(request.POST)
+    if form.is_valid():
+        now = datetime.datetime.now()
+        comment = request.POST['notes']
+        poi.notes = """----- commento in data %s -----
+%s
+-----
+%s""" % (now, comment, poi.notes)
+        poi.save()
+        return HttpResponseRedirect('/risorsa/%s/?comment=true' % poi.slug)
+    else:
+        return render(request, 'pois/fv_poi_feedback.html', {'form': form})

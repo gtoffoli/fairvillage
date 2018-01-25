@@ -1,4 +1,4 @@
-{% extends "roma/fairvillage_base.html" %}
+{% extends "fairvillage/fairvillage_base.html" %}
 {% load staticfiles i18n set_var %}
 
 {% block head_title %}{% if zone.zonetype_id == 3 %}{{ zone.code }} - {% elif zone.zonetype_id == 6 %}{{ zone.zonetype_label|capfirst }} {% endif %}{{ zone.name }}, {{zone.prefix|lower|capfirst}}{% endblock %}

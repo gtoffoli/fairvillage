@@ -1,4 +1,4 @@
-{% extends "roma/fairvillage_base.html" %}
+{% extends "fairvillage/fairvillage_base.html" %}
 {% load staticfiles i18n set_var %}
 
 {% block head_title %}{{ poi_dict.prefixed_name }}, {{poi_dict.comune.0}}{% if poi_dict.comune.1 != 'roma' %} - {{ poi_dict.zone_parent }}{% else %} - {% for zone in zone_list %}{{zone.name}}{%if not forloop.last %}, {% endif %}{% endfor %}{% endif %}{% endblock %}
@@ -9,7 +9,7 @@
 {% block body_id %}poi_detail{% endblock %}
 
 {% block content %}
-    <div class="boxcontent">
+    <div class="mT20">
         <div class="row mB10">
             <div class="col-md-12">
                 <div class="segnaposto">{% if poi_dict.comune.1 != 'roma' %}{{ poi_dict.zone_parent|upper }} - {% endif %}{{ poi_dict.comune.0|upper }}</div>
@@ -19,162 +19,152 @@
             </div>
         </div>
         <div class="row mB20">
-            <div class="col-md-6 mB20">
+            <div class="col-md-6">
             {% if poi_dict.point %} 
                 <div id="map" class="mapRes"></div>
-                <div class="mT10"><div class="marg-bottom-5"><a class="alfa-blue-normal" href="javascript: explore_viewport();">{% trans "explore the resources in the neighbourhood"|capfirst %}</a></div>
-   <div id="live-geolocation" class="marg-bottom-5"></div>
-   <div id="muoviroma-percorso"class="marg-bottom-5"></div></div>
-                {% if poi_dict_list %}
-                <div><a id="explore_viewport" href="#" data-toogle="tooltip" title="{% trans "explore the resources in the neighbourhood" %}"><i class="fa fa-map-o" aria-hidden="true"></i> {% trans "explore the resources in the neighbourhood" %}</a></div>
-                <div <span id="live-geolocation"></span></p>
-            {% endif %}
+                <p class="mT10 txt-demi-small"><a id="explore_viewport" href="#" data-toogle="tooltip" title="{% trans "explore the resources in the neighbourhood" %}"><i class="fa fa-map-o" aria-hidden="true"></i> {% trans "explore the resources in the neighbourhood" %}</a> - <span id="live-geolocation"></span></p>
             {% endif %}
             </div>
             <div class="col-md-6 mB20">
                 <table class="table-card"><tbody>
                     {% if poitype %}
-                        <tr><th>{% trans "Category" %}</th><td class="p-category"><a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poitype.url }}" title="{% trans "list the resources" %} {% trans "of the category" %} {{ poitype.name }}">{{ poitype.name }}</a></td></tr>
+                        <tr><th>{% trans "Category" %}</th><td><a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poitype.url }}" title="{% trans "list the resources" %} {% trans "of the category" %} {{ poitype.name }}">{{ poitype.name }}</a></td></tr>
                     {% endif %}
-                    		{% if poi_dict.host_name %}
-			<tr><th>{% trans "Hosted by" %}</th><td><a href="{{ poi_dict.host_url }}">{{ poi_dict.host_name }}</a></td></tr>
-		{% endif %} 
-		{% if poi_dict.short %}
-			<tr><th>{% trans "Shortly" %}</th><td class="p-summary">{{ poi_dict.short }}</td></tr>
-		{% endif %}
-		{% if zone_list %}
-			<tr>
-				<th>{% trans "Zones" %}</th>
-				<td>{% for zone in zone_list %}
-					  {% if not zone.code %}
-						{% if zone.slug %}
-							<a data-toogle="tooltip" class="alfa-blue-normal p-location" href="/indice-zona/{{ zone.slug }}/" title="{% trans "list the resources" %} {% trans "located in the zone" %} {{ zone.name }}"><span class="notranslate"> {{ zone.name }}</span></a>
-						{% else %}
-							<a data-toogle="tooltip" class="alfa-blue-normal p-location" href="{{ zone.url }}" title="{% trans "list the resources" %} {% trans "located in the zone" %} {{ zone.name }}"><span class="notranslate">{{ zone.name }}</span></a>
-						{% endif %}
-						{% if not forloop.last %}<span>&bull;</span>{% endif %}
-						{% endif %}
-					{% endfor %}
-				</td>
-			</tr>
-		{% endif %}
-		<tr><th>{% trans "Address" %}</th><td>{% if  poi_dict.street_url %}<a rel="tooltip" class="alfa-blue-normal p-street-address" href="{{ poi_dict.street_url }}" title="{% trans "list the resources" %} {% trans "located near" %} {{ poi_dict.street_address }}">{% endif %}{{ poi_dict.street_address }}{% if  poi_dict.street_url %}</a>{% endif %} - {{ poi_dict.cap }} {{ poi_dict.commune }}</td></tr>
-		{% if poi_dict.phones %}
-			<tr><th>{% trans "Phone" %}</th>
-				<td class="p-tel">{% for phone in poi_dict.phones %}
-						{{ phone }}
-						{% if not forloop.last %}<span>&bull;</span>{% endif %}
-					{% endfor %}
-				</td>
-			</tr>
-		{% endif %}
-		{% if poi_dict.emails %}
-			<tr><th>E-mail</th>
-				<td>{% for email in poi_dict.emails %}
-						<a data-toogle="tooltip" class="alfa-blue-normal u-email" href="{{ email.0 }}">{{ email.1 }}</a>
-						{% if not forloop.last %}<br>{% endif %}
-					{% endfor %}
-					</td></tr>
-		{% endif %}
-		{% if poi_dict.webs %}
-			<tr><th >Web</th>
-				<td>{% for web in poi_dict.webs %}
-						<a data-toogle="tooltip" class="alfa-blue-normal u-url" href="{{ web.0 }}" target="_blank">{{ web.1 }}</a>
-						{% if not forloop.last %}<br>{% endif %}
-					{% endfor %}
-				</td>
-			</tr>
-		{% endif %}
-		{% set affiliation = poi_dict.affiliation %}{% if affiliation %}
-			<tr><th>{% trans "Affiliation" %}</th>
-				<td>{% if affiliation.logo %}<img class="img-thumb-white" src="{{ affiliation.logo }} ">{% endif %}
-					<a data-toogle="tooltip" class="alfa-blue-normal" href="{{ affiliation.url }}"  title="{% trans "Show the profile of"|lower %} {{ affiliation.name }}"><span class="notranslate">{{ affiliation.name }}</span></a>
-				</td>
-			</tr>
-		{% endif %}
-		{% if poi_list %}
-			<tr>
-				<th>{% trans "affiliated resources"|capfirst %}</th>
-				<td>{% if poi_list|length <= 8 %}
-					<div>{% for affiliated in poi_list %}
-						<a data-toogle="tooltip" class="alfa-blue-normal p-org" href="{{ affiliated.url }}"><span class="notranslate">{{ affiliated.name }}</span></a>{% if not forloop.last %}<span>&bull;</span>{% endif %}
-					{% endfor %}</div>
-				{% endif %}
-				{% if poi_list|length >= 2 %}
-					<div><a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poi_dict.url }}rete/">{% trans "show"|capfirst %} {% trans "a map of" %} {% trans "affiliated resources" %}</a></div>
-				{% endif %}
-				</td>
-			</tr>
-		{% endif %}
-		{% if hosted_list %}
-			<tr>
-				<th>{% trans "Hosted resources" %}</th>
-				<td>
-				{% for hosted in hosted_list %}
-					<a data-toogle="tooltip" class="alfa-blue-normal" href="{{ hosted.url }}"><span class="notranslate">{{ hosted.name }}</span></a>{% if not forloop.last %}<span>&bull;</span>{% endif %}
-				{% endfor %}
-				</td>
-			</tr>
-		{% endif %}
-		{% if n_caredby and n_caredby < 1000 %}
-			<tr>
-				<th>{% trans "network"|capfirst %}</th>
-				<td><a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poi_dict.url }}mappa/">{% trans "show"|capfirst %} {% trans "a map of" %} {% trans "friend resources" %}</a></td>
-			</tr>
-		{% endif %}
+                    {% if poi_dict.host_name %}
+                        <tr><th>{% trans "Hosted by" %}</th><td><a href="{{ poi_dict.host_url }}">{{ poi_dict.host_name }}</a></td></tr>
+                    {% endif %}
+                    {% if poi_dict.short %}
+                        <tr><th>{% trans "Shortly" %}</th><td>{{ poi_dict.short }}</td></tr>
+                    {% endif %}
+                    {% if zone_list %}
+                        <tr>
+                            <th>{% trans "Zones" %}</th>
+                            <td>{% for zone in zone_list %}
+                                {% if not zone.code %}
+                                    {% if zone.slug %}
+                                        <a data-toogle="tooltip" class="alfa-blue-normal" href="/indice-zona/{{ zone.slug }}/" title="{% trans "list the resources" %} {% trans "located in the zone" %} {{ zone.name }}"><span class="notranslate"> {{ zone.name }}</span></a>
+                                    {% else %}
+                                        <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ zone.url }}" title="{% trans "list the resources" %} {% trans "located in the zone" %} {{ zone.name }}"><span class="notranslate">{{ zone.name }}</span></a>
+                                    {% endif %}
+                                    {% if not forloop.last %}<span>&bull;</span>{% endif %}
+                                {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                    <tr><th>{% trans "Address" %}</th><td>{% if  poi_dict.street_url %}<a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poi_dict.street_url }}" title="{% trans "list the resources" %} {% trans "located near" %} {{ poi_dict.street_address }}">{% endif %}{{ poi_dict.street_address }}{% if  poi_dict.street_url %}</a>{% endif %} - {{ poi_dict.cap }} {{ poi_dict.commune.1 }}</td></tr>
+                    {% if poi_dict.phones %}
+                        <tr><th>{% trans "Phone" %}</th>
+                        <td>
+                            {% for phone in poi_dict.phones %}
+                                {{ phone }}{% if not forloop.last %}<span>&bull;</span>{% endif %}
+                            {% endfor %}
+                        </td>
+                        </tr>
+                    {% endif %}
+                    {% if poi_dict.emails %}
+                        <tr><th>E-mail</th>
+                        <td>
+                            {% for email in poi_dict.emails %}
+                                <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ email.0 }}">{{ email.1 }}</a>
+                                {% if not forloop.last %}<br>{% endif %}
+                            {% endfor %}
+                        </td></tr>
+                    {% endif %}
+                    {% if poi_dict.webs %}
+                        <tr><th >Web</th>
+                        <td>
+                            {% for web in poi_dict.webs %}
+                                <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ web.0 }}" target="_blank">{{ web.1 }}</a>
+                                {% if not forloop.last %}<br>{% endif %}
+                            {% endfor %}
+                        </td></tr>
+                    {% endif %}
+                    {% set affiliation = poi_dict.affiliation %}
+                    {% if affiliation %}
+                        <tr><th>{% trans "Affiliation" %}</th>
+                        <td>{% if affiliation.logo %}<img class="img-thumb-white" src="{{ affiliation.logo }} ">{% endif %}
+                            <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ affiliation.url }}"  title="{% trans "Show the profile of"|lower %} {{ affiliation.name }}"><span class="notranslate">{{ affiliation.name }}</span></a>
+                        </td></tr>
+                    {% endif %}
+                    {% if poi_list %}
+                        <tr><th>{% trans "affiliated resources"|capfirst %}</th>
+                        <td>{% if poi_list|length <= 8 %}
+                            <div>{% for affiliated in poi_list %}
+                                    <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ affiliated.url }}"><span class="notranslate">{{ affiliated.name }}</span></a>{% if not forloop.last %}<span>&bull;</span>{% endif %}
+                            {% endfor %}</div>
+                        {% endif %}
+                        {% if poi_list|length >= 2 %}
+                            <div><a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poi_dict.url }}rete/">{% trans "show"|capfirst %} {% trans "a map of" %} {% trans "affiliated resources" %}</a></div>
+                        {% endif %}
+                        </td></tr>
+                    {% endif %}
+                    {% if hosted_list %}
+                        <tr><th>{% trans "Hosted resources" %}</th>
+                        <td>
+                            {% for hosted in hosted_list %}
+                                <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ hosted.url }}"><span class="notranslate">{{ hosted.name }}</span></a>{% if not forloop.last %}<span>&bull;</span>{% endif %}
+                            {% endfor %}
+                        </td></tr>
+                    {% endif %}
+                    {% comment %}
+                    {% if n_caredby and n_caredby < 1000 %}
+                        <tr><th>{% trans "network"|capfirst %}</th>
+                        <td><a data-toogle="tooltip" class="alfa-blue-normal" href="{{ poi_dict.url }}mappa/">{% trans "show"|capfirst %} {% trans "a map of" %} {% trans "friend resources" %}</a></td>
+                        </tr>
+                    {% endif %}
+                    {% endcomment %}
                 </tbody></table>
-{% set careof = poi_dict.careof %}    
-	{% if careof %}
-		<div><strong>{% trans "This profile care of" %}: </strong>
-		{% if careof.logo_url %}<a rel="tooltip" href="{{ careof.web }}" title="{% trans "go to the website of" %} {{ careof.name }}"><img class="img-thumb-white" src="{{ careof.logo_url }}"></a>{% endif %}
-		<a data-toogle="tooltip" class="alfa-blue-normal" href="{{ careof.url }}" title="{% trans "Show the profile of"|lower %} {{ careof.name }}"><span class="notranslate">{{ careof.name }}</span></a>
-		</div>
-	{% endif %}
-	<hr size="1" style="margin: 1px 0px;">
-	{% if request.GET.comment %}
-		<div class="marg-bottom-10"><strong>{% trans "Thanks for your contribution" %}!</strong></div>
-	{% else %}
-		<div class="txt-small marg-bottom-10">{% trans "If the information in this page isn't correct, up-to-date and complete" %}, <a class="alfa-blue-normal" href="/annota-risorsa/{{ poi_dict.slug }}/">{% trans "send us a note" %}</a>. {% trans "Thanks" %}!</div>
-{% endif %}
+                {% set careof = poi_dict.careof %}    
+                {% if careof %}
+                    <div class="txt-demi-small"><strong>{% trans "This profile care of" %}: </strong>
+                        {% if careof.logo_url %}<a data-toogle="tooltip" href="{{ careof.web }}" title="{% trans "go to the website of" %} {{ careof.name }}"><img class="img-thumb-white" src="{{ careof.logo_url }}"></a>{% endif %}
+                        <a data-toogle="tooltip" class="alfa-blue-normal" href="{{ careof.url }}" title="{% trans "Show the profile of"|lower %} {{ careof.name }}">{{ careof.name }}</a>
+                    </div>
+                {% endif %}
+                <hr size="1" style="margin: 1px 0px;">
+                {% if request.GET.comment %}
+                    <div class="txt-demi-small mB10"><strong>{% trans "Thanks for your contribution" %}!</strong></div>
+                {% else %}
+                    <div class="txt-small mB10">{% trans "If the information in this page isn't correct, up-to-date and complete" %}, <a class="alfa-blue-normal" href="/annota-risorsa/{{ poi_dict.slug }}/">{% trans "send us a note" %}</a>. {% trans "Thanks" %}!</div>
+                {% endif %}
             </div>
-
-	{% if poi_dict.description and poi_dict.video %}
-		<div class="row">
-			<div class="col-md-6"><div  class="boxround-small boxelenco e-content marg-bottom-10" style="padding:10px">{{ poi_dict.description|safe }}</div></div>
-			<div class="col-md-6"><div class="flex-video widescreen marg-bottom-10"><iframe src="http://{{ poi_dict.video }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
-		</div>
-	{% elif poi_dict.description %}
-		<div class="row">
-			<div class="col-md-12"><div  class="boxround-small boxelenco e-content marg-bottom-10" style="padding:10px">{{ poi_dict.description|safe }}</div></div>
-		</div>
-	{% elif poi_dict.video %}
-		<div class="row">
-			<div class="col-md-12"><div class="flex-video widescreen marg-bottom-10"><iframe src="http://{{ poi_dict.video }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
-		</div>
-	{% endif %}
-	{% if feeds %}
-		<div class="row">
-			<div class="col-md-12"><div class="portlet">
-			      <ul class="feed">
-	{% for entry in feed.entries|slice:":3" %}
-		{% if entry.title %}
-		<li>
-		<div><a class="alfa-blue" href="{{ entry.link }}" target="_new" title="{% trans "read the original article" %}">{{ entry.title }}</a></div>
-		<div class="p3">{{ entry.date }}</div>
-		{% if entry.summary %}
-		<div class="p3">{{ entry.summary|striptags|safe|truncatewords:80 }}</div>
-		{% else %}
-		<div class="p3">{{ entry.content|striptags|safe|truncatewords:80 }}</div>
-		{% endif %}
-	  </li>
-		{% endif %}
-	{% endfor %}
-  </ul>
-			</div></div>
-		</div>
-	{% endif %}
-
-
+        </div>
+        {% if poi_dict.description and poi_dict.video %}
+            <div class="row">
+                <div class="col-md-6"><div  class="boxround-small boxelenco e-content marg-bottom-10" style="padding:10px">{{ poi_dict.description|safe }}</div></div>
+                <div class="col-md-6"><div class="flex-video widescreen mB10"><iframe src="http://{{ poi_dict.video }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
+            </div>
+        {% elif poi_dict.description %}
+            <div class="row">
+                <div class="col-md-12"><div class="boxround-small boxelenco mB10 p10">{{ poi_dict.description|safe }}</div></div>
+            </div>
+        {% elif poi_dict.video %}
+            <div class="row">
+                <div class="col-md-12"><div class="flex-video widescreen mB10"><iframe src="http://{{ poi_dict.video }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
+            </div>
+        {% endif %}
+        {% if feeds %}
+            <div class="row">
+                <div class="col-md-12"><div class="portlet">
+                    <ul class="feed">
+                    {% for entry in feed.entries|slice:":3" %}
+                    {% if entry.title %}
+                        <li>
+                            <div><a class="alfa-blue" href="{{ entry.link }}" target="_blank" title="{% trans "read the original article" %}">{{ entry.title }}</a></div>
+                            <div class="p3">{{ entry.date }}</div>
+                            {% if entry.summary %}
+                                <div class="p3">{{ entry.summary|striptags|safe|truncatewords:80 }}</div>
+                            {% else %}
+                                <div class="p3">{{ entry.content|striptags|safe|truncatewords:80 }}</div>
+                            {% endif %}
+                        </li>
+                    {% endif %}
+                    {% endfor %}
+                    </ul>
+                </div></div>
+            </div>
+        {% endif %}
     </div>
 {% endblock content %}
 
@@ -186,6 +176,37 @@
 <script type="text/javascript" src="{% static "pois/pois_map.js" %}" ></script>
 
 <script type="text/javascript">
+
+var poi_style = new OpenLayers.Style({
+        'fillColor': '#FF0000',
+        'fillOpacity': .0,
+        'strokeColor': '${icon_color}',
+        'strokeWidth': 1,
+        'pointRadius': '${radius}',
+        'label': '',
+        'labelAlign': 'cm',
+        'fontFamily': 'arial',
+        'fontSize': '14px',
+        'graphicName': '${icon_name}',
+    },
+    { 'context': {
+        radius: function(feature) {
+            return Math.max(5, 2 * (feature.layer.map.getZoom() - 8));
+        }}
+    }
+);
+
+var poi_style_selected = new OpenLayers.Style({
+        'strokeWidth': 2,
+        'label': '${name}',
+    }
+);    
+
+var poi_style_map = new OpenLayers.StyleMap({
+    'default': poi_style,
+    'select': poi_style_selected,
+});
+
 function map_init(){
 	map = new OpenLayers.Map('map', {
 		projection: proj_OSM,
@@ -224,9 +245,7 @@ function map_init(){
 	// map.zoomToExtent(vectors.getDataExtent());
 }
 
-function location_error() {
-	alert('{% trans "cannot determine your current location" %}');
-}
+
 function show_path(loc) {
 	
 	var lat_1 = loc.coords.latitude;
@@ -251,16 +270,16 @@ function path_from_here() {
 DX = 700; // 450.0;
 DY = 400; // 250.0;
 function lookup_location() {
-	  geoPosition.getCurrentPosition(explore_location, location_error);
+    $(body).css('cursor','default');
+    geoPosition.getCurrentPosition(explore_location, location_error);
+}
+function location_error() {
+    alert('{% trans "cannot determine your current location" %}');
 }
 $(function() {
-	if (geoPosition.init()) {
-		$("#live-geolocation").html('<span class="icon-hand-right"></span> <a href="#" class="alfa-blue-normal" onclick="lookup_location();return false">{% trans "explore the zone around your current position"|capfirst %}</a>');
-		// $("#muoviroma-percorso").html('<span class="icon-hand-right"></span> <a href="#" class="alfa-blue-normal" onclick="path_from_here();return false">{% trans "find your way to this resource using the services by"|capfirst %} muoversiaroma.it</a>');
-	} else {
-		// $("#muoviroma-percorso").html('<br /><div class="icon-hand-right"></div> <a href="http://muovi.roma.it/percorso/js?cr=1&cr_da={% trans "enter your current address" %}&cr_a={{ poi_dict.street_name }}+{{ poi_dict.number }}, Roma" target="_blank">{% trans "find your way to this resource using the services by"|capfirst %} muovi.roma.it</a>');
-		// $("#muoviroma-percorso").html('<span class="icon-hand-right"></span> <a class="alfa-blue-normal" href="http://muovi.roma.it/percorso/js?cr=1&cr_da={% trans "enter your current address" %}&cr_a={{ poi_dict.street_address }}, Roma" target="_blank">{% trans "find your way to this resource using the services by"|capfirst %} muovi.roma.it</a>');
-	}
+    if (geoPosition.init()) {
+        $("#live-geolocation").html('<a href="#" onclick="lookup_location();return false"><i class="fa fa-location-arrow" aria-hidden="true"></i> {% trans "explore the zone around your current position" %}</a>');
+    }
 });
 map_init();
 </script>

@@ -1,4 +1,6 @@
 import os
+
+"""
 import sys
 
 PROJECT_ROOT = os.path.dirname(__file__)
@@ -6,24 +8,22 @@ PARENT_ROOT = os.path.dirname(PROJECT_ROOT)
 
 sys.path.insert(0, os.path.join(PARENT_ROOT, '..', 'roma'))
 sys.path.insert(0, PARENT_ROOT)
+"""
 
-from roma.settings import *
+from roma import settings
+from settings import *
 PROJECT_ROOT = os.path.dirname(__file__)
 PARENT_ROOT = os.path.dirname(PROJECT_ROOT)
 
-# INSTALLED_APPS = list(INSTALLED_APPS) + ['fairvillage']
 INSTALLED_APPS = list(INSTALLED_APPS)
-# INSTALLED_APPS.remove('fairvillage')
 INSTALLED_APPS.append('fairvillage')
 
 ONLINE_DOMAIN = 'www.fairvillage.eu'
 SITE_NAME = 'FairVillage'
-#GRAPPELLI_ADMIN_TITLE='Amministrazione FairVillage'
 DEFAULT_FROM_EMAIL = 'FairVillage <noreply@linkroma.it>'
 ROOT_URLCONF = 'fairvillage.urls'
 
-# Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'fairvillage.wsgi.application'
+# WSGI_APPLICATION = 'fairvillage.wsgi.application'
 
 STATIC_ROOT = os.path.join(PARENT_ROOT, 'static')
 STATIC_URL = '/static/'

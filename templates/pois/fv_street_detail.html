@@ -1,4 +1,4 @@
-{% extends "roma/fairvillage_base.html" %}
+{% extends "fairvillage/fairvillage_base.html" %}
 {% load staticfiles i18n %}
 
 {% block head_title %}{% if view_type == 'street' %}{{ street_name }}, Roma{% else %}{% trans "search the territory"|capfirst %}{% endif %}{% endblock %}
