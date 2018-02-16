@@ -133,7 +133,7 @@
         {% if poi_dict.description and poi_dict.video %}
             <div class="row">
                 <div class="col-md-6"><div  class="boxround-small boxelenco e-content marg-bottom-10" style="padding:10px">{{ poi_dict.description|safe }}</div></div>
-                <div class="col-md-6"><div class="flex-video widescreen mB10"><iframe src="http://{{ poi_dict.video }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
+                <div class="col-md-6"><div class="flex-video widescreen mB10"><iframe src="{{ poi_dict.video.0 }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
             </div>
         {% elif poi_dict.description %}
             <div class="row">
@@ -141,7 +141,7 @@
             </div>
         {% elif poi_dict.video %}
             <div class="row">
-                <div class="col-md-12"><div class="flex-video widescreen mB10"><iframe src="http://{{ poi_dict.video }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
+                <div class="col-md-12"><div class="flex-video widescreen mB10"><iframe src="{{ poi_dict.video.0 }}?autoplay=1" frameborder="0" allowfullscreen=""></iframe></div></div>
             </div>
         {% endif %}
         {% if feeds %}
@@ -251,7 +251,7 @@ function show_path(loc) {
 	var lat_1 = loc.coords.latitude;
 	var lon_1 = loc.coords.longitude;
 	// var s = "http://muovi.roma.it/percorso/js?cr=1&cr_da=punto:({0},{1})&cr_a={2}";
-	var s = "http://muovi.roma.it/percorso/js?cp=1&da=punto:({0},{1})&a={2}";
+	// var s = "http://muovi.roma.it/percorso/js?cp=1&da=punto:({0},{1})&a={2}";
 	// address = "{{ poi_dict.street_name }}".replace(/ /g, '+')+'+'+"{{ poi_dict.number }}";
 	address = "{{ poi_dict.street_address }}".replace(/ /g, '+');
 	var url = s.format(lat_1, lon_1, address);
