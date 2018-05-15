@@ -137,4 +137,4 @@ CACHES = {
 }
 
 # POITYPE_SLUGS = ['assistenza-a-stranieri-e-immigrati', 'biblioteche-comunali', 'rilascio-tessera-sanitaria-stp', 'case-della-salute', 'consultori-familiari', 'italiano-per-stranieri', 'uffici-di-collocamento', 'centri-per-limmigrazione', 'ethnic-communities',]
-POITYPE_SLUGS = ['assistenza-a-stranieri-e-immigrati', 'biblioteche-comunali', 'rilascio-tessera-sanitaria-stp', 'case-della-salute', 'consultori-familiari', 'italiano-per-stranieri', 'asili-nido', 'scuole-dell-infanzia','scuole-primarie-elementari',]
+POITYPE_SLUGS = ['assistenza-a-stranieri-e-immigrati', 'biblioteche', 'rilascio-tessera-sanitaria-stp', 'case-della-salute', 'consultori-familiari', 'italiano-per-stranieri', 'asili-nido-spazi-bebi', 'scuole-dell-infanzia','scuole-primarie-elementari',]
