@@ -59,9 +59,10 @@ urlpatterns = [
     url(r'^', include('roma.urls')),
 ]
 
-# urlpatterns += patterns('',
+"""
 urlpatterns += [
     url (r'^accounts/signup/$', roma_views.signup, name='account_signup'), # 131015 GT
     url (r'^accounts/', include('allauth.urls')),
     url(r'^accounts/profile/', TemplateView.as_view(template_name='account/profile.html'), name='welcome',),
 ]   
+"""

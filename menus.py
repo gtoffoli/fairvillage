@@ -74,14 +74,14 @@ def resources_children(request):
     """
     children.append (MenuItem(
          _("By theme area"),
-         url='/aree-tematiche',
+         url='/risorse-utili-roma-lazio-aree-tematiche',
          weight=80,
         ))
     
     if request.user.is_authenticated():
         children.append (MenuItem(
              _("By category"),
-             url='/categorie-di-risorsa',
+             url='/risorse-utili-roma-lazio-categorie',
              weight=80,
        ))
     """
