@@ -193,7 +193,7 @@ Menu.add_item("main", MenuItem(ugettext_lazy("The zones"),
                                weight=20,
                                children=zones_children,
                                separator=True))
-Menu.add_item("main", MenuItem(ugettext_lazy("The project"),
+Menu.add_item("main", MenuItem(ugettext_lazy("Project"),
                                url='/p',
                                weight=30,
                                children=project_children,
